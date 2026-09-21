@@ -8,9 +8,47 @@ const int RES_WIDTH = 14;
 const int RES_HEIGHT = 28;
 
 
+class Block {
+    using BlockData = int[2][2][2];
+
+    BlockData block{};
+    int _x, _y;
+
+public:
+    Block() {}
+
+    Block(int x, int y) {
+        _x = x;
+        _y = y;
+        processTiles();
+    }
+
+    const BlockData& getBlockCoords() {
+        return block;
+    }
+    
+    void processTiles() {
+        block[0][0][0] = _x;
+        block[0][0][1] = _y;
+        block[0][1][0] = _x;
+        block[0][1][1] = _y-1;
+
+        block[1][1][0] = _x+1;
+        block[1][1][1] = _y-1;
+        block[1][0][0] = _x+1;
+        block[1][0][1] = _y;
+    }
+
+    void gravity() {
+        _y++;
+        processTiles();
+    }
+};
+
+
 class Field {
 private:
-    int** coords[RES_HEIGHT][RES_WIDTH];
+    int coords[RES_HEIGHT][RES_WIDTH];
 
 public:
     Field() {
@@ -52,24 +90,16 @@ public:
         }
         std::cout << std::endl;
     }
-};
 
-
-class Block {
-    int** block[2][2];
-    int _x, _y;
-
-public:
-    Block() {}
-
-    Block(int x, int y) {
-        for (int i=0; i<2; i++) {
-            for (int j=0; j<2; j++) {
-                block[i][j] = 0;
+    void processField(Block block) {
+        const auto& blockCoords = block.getBlockCoords();
+        for (int i = 0; i<2; i++) {
+            for (int j = 0; j<2; j++) {
+                int x = blockCoords[i][j][0];
+                int y = blockCoords[i][j][1];
+                coords[y][x] = 1;
             }
         }
-        _x = x;
-        _y = y;
     }
 };
 
@@ -81,7 +111,7 @@ class Game {
 public:
     Game() {
         field = Field();
-        currentBlock = Block(13, 28);
+        currentBlock = Block(13, -1);
     }
 
     void process() {
@@ -89,6 +119,9 @@ public:
             std::system("clear");
             field.printField();
             std::this_thread::sleep_for(std::chrono::seconds(1));
+
+            currentBlock.gravity();
+            field.processField(currentBlock);
         }
     }
 };
