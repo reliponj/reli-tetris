@@ -1,13 +1,11 @@
 #include <iostream>
+#include <chrono>
+#include <thread>
+
 
 const int TILE_SIZE = 5;
 const int RES_WIDTH = 14;
 const int RES_HEIGHT = 28;
-
-
-class Block {
-    int** coords[2][2];
-};
 
 
 class Field {
@@ -52,11 +50,52 @@ public:
         for (int j=0; j<RES_WIDTH * 5 + 1; j++) {
             std::cout << "--";
         }
+        std::cout << std::endl;
     }
 };
 
+
+class Block {
+    int** block[2][2];
+    int _x, _y;
+
+public:
+    Block() {}
+
+    Block(int x, int y) {
+        for (int i=0; i<2; i++) {
+            for (int j=0; j<2; j++) {
+                block[i][j] = 0;
+            }
+        }
+        _x = x;
+        _y = y;
+    }
+};
+
+
+class Game {
+    Block currentBlock;
+    Field field;
+
+public:
+    Game() {
+        field = Field();
+        currentBlock = Block(13, 28);
+    }
+
+    void process() {
+        while (true) {
+            std::system("clear");
+            field.printField();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+};
+
+
 int main() {
-    Field field = Field();
-    field.printField();
+    Game game = Game();
+    game.process();
     return 0;
 }
