@@ -1,46 +1,55 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include "components/block.cpp"
+#include "utils/random.cpp"
 
 
 const int TILE_SIZE = 5;
 const int RES_WIDTH = 14;
 const int RES_HEIGHT = 28;
+const std::vector<Color> COLORS = {
+    Color::Red,
+    Color::Orange,
+    Color::Yellow,
+    Color::Green,
+    Color::Cyan,
+    Color::Blue,
+    Color::Purple,
+};
 
 
-class Block {
-    using BlockData = int[2][2][2];
 
-    BlockData block{};
-    int _x, _y;
-
+class Figure {
+    std::vector<Block> blocks;
+    int offsetX, offsetY;
 public:
-    Block() {}
+    Figure() {}
 
-    Block(int x, int y) {
-        _x = x;
-        _y = y;
+    Figure(int x, int y) {
+        int randomColor = randomInt(0, 6);
+        Color color = COLORS[randomColor];
+        blocks = {
+            Block(x, y, color),
+            Block(x, y-1, color),
+            Block(x+1, y-1, color),
+            Block(x+1, y, color),
+        };
+        offsetX = 0;
+        offsetY = 0;
         processTiles();
-    }
-
-    const BlockData& getBlockCoords() {
-        return block;
     }
     
     void processTiles() {
-        block[0][0][0] = _x;
-        block[0][0][1] = _y;
-        block[0][1][0] = _x;
-        block[0][1][1] = _y-1;
-
-        block[1][1][0] = _x+1;
-        block[1][1][1] = _y-1;
-        block[1][0][0] = _x+1;
-        block[1][0][1] = _y;
+        for (Block block : blocks) {
+            block.setCoords(block.x() + offsetX, block.y() + offsetY);
+            offsetX = 0;
+            offsetY = 0;
+        }
     }
 
     void gravity() {
-        _y++;
+        offsetY++;
         processTiles();
     }
 };
