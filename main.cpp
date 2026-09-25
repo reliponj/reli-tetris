@@ -6,6 +6,7 @@
 
 #include "components/block.cpp"
 #include "utils/random.cpp"
+#include "utils/input.cpp"
 
 
 const int TILE_SIZE = 5;
@@ -70,6 +71,16 @@ public:
             }
         }
         return false;
+    }
+
+    void moveLeft() {
+        offsetX--;
+        processTiles();
+    }
+
+    void moveRight() {
+        offsetX++;
+        processTiles();
     }
 };
 
@@ -159,19 +170,50 @@ public:
     }
 
     void process() {
+        using Clock = std::chrono::steady_clock;
+
+        TerminalInput input;
+
+        auto nextInputCheck = Clock::now();
+        auto nextGravityUpdate = Clock::now() + std::chrono::seconds(1);
+
         while (true) {
-            std::system("clear");
+            auto now = Clock::now();
 
-            field.printField(currentFigure);
-
-            bool isGrounded = field.moveBlocks(currentFigure.getBlocks());
-            if (isGrounded) {
-                spawnFigure();
-            } else {
-                currentFigure.gravity();
+            if (now >= nextInputCheck) {
+                std::system("clear");
+                processInput(input);
+                nextInputCheck = now + std::chrono::milliseconds(50);
+                field.printField(currentFigure);
             }
 
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            if (now >= nextGravityUpdate) {
+                bool isGrounded = field.moveBlocks(currentFigure.getBlocks());
+                if (isGrounded) {
+                    spawnFigure();
+                } else {
+                    currentFigure.gravity();
+                }
+                nextGravityUpdate = now + std::chrono::seconds(1);
+            }
+
+            std::this_thread::sleep_until(std::min(nextInputCheck, nextGravityUpdate));
+        }
+    }
+
+    void processInput(TerminalInput& input) {
+        switch (input.readKey()) {
+            case Key::Left:
+                currentFigure.moveLeft();
+                break;
+            case Key::Right:
+                currentFigure.moveRight();
+                break;
+            case Key::Down:
+                currentFigure.gravity();
+                break;
+            default:
+                return;
         }
     }
 };
